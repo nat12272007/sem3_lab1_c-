@@ -2,11 +2,8 @@
 
 выполнила Сергеева Наталья Александрровна АБс-524 АВТФ
 
-реализация структур данных на c++ прописаннна в заголовочном файле (data_structures.h)
 
-взаимодействие со структурами данных (интерфейс) прописанно в main.cpp
-
-команда для компиляции программы: g++ -std=c++17 main.cpp -o main
+команда для компиляции программы: g++ -std=c++17 main.cpp array.cpp forward_list.cpp doubly_list.cpp stack.cpp queue.cpp complete_binary_tree.cpp -o main
 
 общий синтаксис: ./main --file <путь_к_файлу> --query "<команда>"
 
