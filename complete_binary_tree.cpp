@@ -1,78 +1,190 @@
 #include "complete_binary_tree.h"
+#include <queue>
 
-CompleteBinaryTree::CompleteBinaryTree(int cap) {
-	capacity = cap;
+CompleteBinaryTree::CompleteBinaryTree() {
+	root = nullptr;
 	size = 0;
-	tree = new string[capacity + 1];
 }
 
-CompleteBinaryTree::~CompleteBinaryTree() { delete[] tree; }
-
-void CompleteBinaryTree::ensureCapacity(int needed) {
-	if (needed <= capacity) return;
-	while (capacity < needed) capacity *= 2;
-	string* nt = new string[capacity + 1];
-	for (int i = 1; i <= size; ++i) nt[i] = tree[i];
-	delete[] tree; 
-	tree = nt;
+CompleteBinaryTree::~CompleteBinaryTree() {
+	clear();
 }
 
-void CompleteBinaryTree::insert(const string& value) { 
-	ensureCapacity(size + 1); 
-	tree[++size] = value; 
+static void destroyTree(TNode* node) {
+	if (!node) return;
+	destroyTree(node->left);
+	destroyTree(node->right);
+	delete node;
 }
 
-int CompleteBinaryTree::search(const string& value) const {
-	for (int i = 1; i <= size; ++i) if (tree[i] == value) return i;
-	return -1;
+void CompleteBinaryTree::clear() {
+	destroyTree(root);
+	root = nullptr;
+	size = 0;
 }
 
-bool CompleteBinaryTree::remove(const string& value) {
-	int pos = search(value);
-	if (pos == -1) return false;
-	tree[pos] = tree[size];
-	--size;
-	return true;
+static TNode* insertNode(TNode* node, int value, bool& added) {
+	if (!node) {
+		added = true;
+		return new TNode(value);
+	}
+	if (value < node->value) {
+		node->left = insertNode(node->left, value, added);
+	} else if (value > node->value) {
+		node->right = insertNode(node->right, value, added);
+	}
+	return node;
+}
+
+bool CompleteBinaryTree::insert(int value) {
+	bool added = false;
+	root = insertNode(root, value, added);
+	if (added) size++;
+	return added;
+}
+
+bool CompleteBinaryTree::search(int value) const {
+	TNode* cur = root;
+	while (cur) {
+		if (value == cur->value) return true;
+		cur = (value < cur->value) ? cur->left : cur->right;
+	}
+	return false;
+}
+
+static TNode* findMin(TNode* node) {
+	while (node && node->left) node = node->left;
+	return node;
+}
+
+static TNode* removeNode(TNode* node, int value, bool& removed) {
+	if (!node) return nullptr;
+	if (value < node->value) {
+		node->left = removeNode(node->left, value, removed);
+	} else if (value > node->value) {
+		node->right = removeNode(node->right, value, removed);
+	} else {
+		removed = true;
+		if (!node->left) {
+			TNode* right = node->right;
+			delete node;
+			return right;
+		}
+		if (!node->right) {
+			TNode* left = node->left;
+			delete node;
+			return left;
+		}
+		TNode* minNode = findMin(node->right);
+		node->value = minNode->value;
+		bool tmp = false;
+		node->right = removeNode(node->right, minNode->value, tmp);
+	}
+	return node;
+}
+
+bool CompleteBinaryTree::remove(int value) {
+	bool removed = false;
+	root = removeNode(root, value, removed);
+	if (removed) size--;
+	return removed;
 }
 
 bool CompleteBinaryTree::isComplete() const {
-	for (int i = 1; i <= size; ++i) {
-		if (2 * i <= size && tree[2 * i].empty()) return false;
-		if (2 * i + 1 <= size && tree[2 * i + 1].empty()) return false;
+	if (!root) return true;
+    
+	queue<TNode*> q;
+	q.push(root);
+	bool seenGap = false;
+    
+	while (!q.empty()) {
+		TNode* n = q.front();
+		q.pop();
+        
+		if (n->left) {
+			if (seenGap) return false;
+			q.push(n->left);
+		} else {
+			seenGap = true;
+		}
+        
+		if (n->right) {
+			if (seenGap) return false;
+			q.push(n->right);
+		} else {
+			seenGap = true;
+		}
 	}
 	return true;
 }
 
 void CompleteBinaryTree::print() const {
 	cout << "Дерево(по уровням): [";
-	for (int i = 1; i <= size; ++i) {
-		if (i > 1) cout << ", ";
-		cout << tree[i];
+	if (root) {
+		queue<TNode*> q;
+		q.push(root);
+		bool first = true;
+		while (!q.empty()) {
+			TNode* n = q.front();
+			q.pop();
+			if (!first) cout << ", ";
+			cout << n->value;
+			first = false;
+			if (n->left) q.push(n->left);
+			if (n->right) q.push(n->right);
+		}
 	}
 	cout << "]\n";
 }
 
-void CompleteBinaryTree::printPreOrder(int index) const {
-	if (index > size) return;
-	cout << tree[index] << " ";
-	printPreOrder(2 * index);
-	printPreOrder(2 * index + 1);
-}
-void CompleteBinaryTree::printInOrder(int index) const {
-	if (index > size) return;
-	printInOrder(2 * index);
-	cout << tree[index] << " ";
-	printInOrder(2 * index + 1);
-}
-void CompleteBinaryTree::printPostOrder(int index) const {
-	if (index > size) return;
-	printPostOrder(2 * index);
-	printPostOrder(2 * index + 1);
-	cout << tree[index] << " ";
+static void printPreOrder(TNode* node) {
+	if (!node) return;
+	cout << node->value << " ";
+	printPreOrder(node->left);
+	printPreOrder(node->right);
 }
 
-void CompleteBinaryTree::printPre() const  { cout << "Pre-order: [ ";  printPreOrder(1);  cout << "]\n"; }
-void CompleteBinaryTree::printIn() const   { cout << "In-order: [ ";   printInOrder(1);   cout << "]\n"; }
-void CompleteBinaryTree::printPost() const { cout << "Post-order: [ "; printPostOrder(1); cout << "]\n"; }
+static void printInOrder(TNode* node) {
+	if (!node) return;
+	printInOrder(node->left);
+	cout << node->value << " ";
+	printInOrder(node->right);
+}
 
-void CompleteBinaryTree::clear() { size = 0; }
+static void printPostOrder(TNode* node) {
+	if (!node) return;
+	printPostOrder(node->left);
+	printPostOrder(node->right);
+	cout << node->value << " ";
+}
+
+void CompleteBinaryTree::printPre() const {
+	cout << "Pre-order: [ ";
+	printPreOrder(root);
+	cout << "]\n";
+}
+
+void CompleteBinaryTree::printIn() const {
+	cout << "In-order: [ ";
+	printInOrder(root);
+	cout << "]\n";
+}
+
+void CompleteBinaryTree::printPost() const {
+	cout << "Post-order: [ ";
+	printPostOrder(root);
+	cout << "]\n";
+}
+
+static void collectPreOrder(TNode* node, vector<int>& out) {
+	if (!node) return;
+	out.push_back(node->value);
+	collectPreOrder(node->left, out);
+	collectPreOrder(node->right, out);
+}
+
+vector<int> CompleteBinaryTree::getElements() const {
+	vector<int> out;
+	collectPreOrder(root, out);
+	return out;
+}

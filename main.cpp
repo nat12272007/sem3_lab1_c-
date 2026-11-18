@@ -26,10 +26,10 @@ void saveToFile(const string& path) {
 
 	out << "Массив " << arr.getSize() << "\n";
 	for (int i = 0; i < arr.getSize(); ++i) out << arr.getElement(i) << " ";
-    
+
 	out << "\nОднСписок " << flist.getCount() << "\n";
 	for (FNode* cur = flist.getHead(); cur; cur = cur->next) out << cur->value << " ";
-    
+
 	out << "\nДвСписок " << dlist.getCount() << "\n";
 	for (LNode* cur = dlist.getHead(); cur; cur = cur->next) out << cur->value << " ";
 
@@ -38,9 +38,10 @@ void saveToFile(const string& path) {
 
 	out << "\nОчередь " << q.getCount() << "\n";
 	for (int i = 0; i < q.getCount(); ++i) out << q.getElement(i) << " ";
-    
+
 	out << "\nДерево " << tree.getSize() << "\n";
-	for (int i = 1; i <= tree.getSize(); ++i) out << tree.getElement(i) << " ";
+	vector<int> treeElems = tree.getElements();
+	for (int v : treeElems) out << v << " ";
 	out << "\n";
 }
 
@@ -54,30 +55,41 @@ void loadFromFile(const string& path) {
 	string type;
 	int n = 0;
 
-	if (in >> type >> n && type == "Массив") {
+	while (in >> type >> n) {
 		if (n < 0 || n > 1000000) n = 0;
-		for (int i = 0; i < n; ++i) { string v; in >> v; arr.pushBack(v); }
+
+		if (type == "Массив") {
+			for (int i = 0; i < n; ++i) { string v; if (in >> v) arr.pushBack(v); }
+		}
+		else if (type == "ОднСписок") {
+			for (int i = 0; i < n; ++i) { string v; if (in >> v) flist.pushBack(v); }
+		}
+		else if (type == "ДвСписок") {
+			for (int i = 0; i < n; ++i) { string v; if (in >> v) dlist.pushBack(v); }
+		}
+		else if (type == "Стек") {
+			for (int i = 0; i < n; ++i) { string v; if (in >> v) stk.push(v); }
+		}
+		else if (type == "Очередь") {
+			for (int i = 0; i < n; ++i) { string v; if (in >> v) q.push(v); }
+		}
+		else if (type == "Дерево") {
+			for (int i = 0; i < n; ++i) { int v; if (in >> v) tree.insert(v); }
+		}
+		else {
+			for (int i = 0; i < n; ++i) { string v; if (!(in >> v)) break; }
+		}
 	}
-	if (in >> type >> n && type == "ОднСписок") {
-		if (n < 0 || n > 1000000) n = 0;
-		for (int i = 0; i < n; ++i) { string v; in >> v; flist.pushBack(v); }
-	}
-	if (in >> type >> n && type == "ДвСписок") {
-		if (n < 0 || n > 1000000) n = 0;
-		for (int i = 0; i < n; ++i) { string v; in >> v; dlist.pushBack(v); }
-	}
-	if (in >> type >> n && type == "Стек") {
-		if (n < 0 || n > 1000000) n = 0;
-		for (int i = 0; i < n; ++i) { string v; in >> v; stk.push(v); }
-	}
-	if (in >> type >> n && type == "Очередь") {
-		if (n < 0 || n > 1000000) n = 0;
-		for (int i = 0; i < n; ++i) { string v; in >> v; q.push(v); }
-	}
-	if (in >> type >> n && type == "Дерево") {
-		if (n < 0 || n > 1000000) n = 0;
-		for (int i = 0; i < n; ++i) { string v; in >> v; tree.insert(v); }
-	}
+}
+
+static bool tryParseInt(const string& s, int& out) {
+	istringstream iss(s);
+	int v;
+	char c;
+	if (!(iss >> v)) return false;
+	if (iss >> c) return false;
+	out = v;
+	return true;
 }
 
 void processCommand(const string& query) {
@@ -149,32 +161,85 @@ void processCommand(const string& query) {
 		else if (cmd == "QPEEK") { iss >> name; cout << q.peek() << "\n"; }
 	}
 	else if (prefix == 'T') {
-		string name, v;
-		if (cmd == "TINSERT") { iss >> name >> v; tree.insert(v); }
-		else if (cmd == "TGET") { iss >> name >> v; cout << (tree.search(v) != -1 ? "TRUE" : "FALSE") << "\n"; }
-		else if (cmd == "TDEL") { iss >> name >> v; tree.remove(v); }
-		else if (cmd == "TCHECK") { iss >> name; cout << (tree.isComplete() ? "TRUE" : "FALSE") << "\n"; }
-		else if (cmd == "TPRE") { iss >> name; tree.printPre(); }
-		else if (cmd == "TIN") { iss >> name; tree.printIn(); }
-		else if (cmd == "TPOST") { iss >> name; tree.printPost(); }
+		string name, vs;
+		int v = 0;
+
+		if (cmd == "TINSERT") {
+			if (!(iss >> name)) return;
+			if (!(iss >> vs)) {
+				cout << "[Ошибка: не указано значение для вставки в дерево]\n";
+				return;
+			}
+			if (!tryParseInt(vs, v)) {
+				cout << "[Ошибка: дерево принимает только целые числа, получено: \""
+				     << vs << "\"]\n";
+				return;
+			}
+			if (tree.insert(v)) cout << "Элемент добавлен\n";
+			else cout << "Ошибка: элемент уже существует\n";
+		}
+		else if (cmd == "TGET") {
+			if (!(iss >> name)) return;
+			if (!(iss >> vs)) {
+				cout << "[Ошибка: не указано значение для поиска]\n";
+				return;
+			}
+			if (!tryParseInt(vs, v)) {
+				cout << "[Ошибка: дерево хранит только целые числа, искать \""
+				     << vs << "\" нельзя]\n";
+				return;
+			}
+			cout << (tree.search(v) ? "TRUE" : "FALSE") << "\n";
+		}
+		else if (cmd == "TDEL") {
+			if (!(iss >> name)) return;
+			if (!(iss >> vs)) {
+				cout << "[Ошибка: не указано значение для удаления]\n";
+				return;
+			}
+			if (!tryParseInt(vs, v)) {
+				cout << "[Ошибка: дерево хранит только целые числа, удалить \""
+				     << vs << "\" нельзя]\n";
+				return;
+			}
+			if (tree.remove(v)) cout << "Элемент удален\n";
+			else cout << "Элемент не найден\n";
+		}
+		else if (cmd == "TCHECK") {
+			iss >> name;
+			cout << (tree.isComplete() ? "TRUE" : "FALSE") << "\n";
+		}
+		else if (cmd == "TPRE") {
+			iss >> name;
+			tree.printPre();
+		}
+		else if (cmd == "TIN") {
+			iss >> name;
+			tree.printIn();
+		}
+		else if (cmd == "TPOST") {
+			iss >> name;
+			tree.printPost();
+		}
+		else {
+			cout << "[Ошибка: неизвестная команда для дерева: \"" << cmd << "\"]\n";
+		}
 	}
 }
 
 int main(int argc, char* argv[]) {
 	string filePath;
 	vector<string> queries;
-	bool replMode = false;
 
 	for (int i = 1; i < argc; ++i) {
 		string arg = argv[i];
 		if (arg == "--file" && i + 1 < argc) filePath = argv[++i];
 		else if (arg == "--query" && i + 1 < argc) queries.push_back(argv[++i]);
-		else if (arg == "--repl") replMode = true;
 	}
 
 	if (filePath.empty()) {
 		filePath = "data.txt";
-		cout << "[файл не указан, зпись рповедется сюда: data.txt]\n";
+		cout << "[файл не указан, запись проводится сюда: data.txt]\n";
 	}
 
 	loadFromFile(filePath);
@@ -182,17 +247,8 @@ int main(int argc, char* argv[]) {
 	if (!queries.empty()) {
 		for (auto& qr : queries) processCommand(qr);
 		saveToFile(filePath);
-	} else if (replMode) {
-		string line;
-		while (getline(cin, line)) {
-			if (line == "EXIT" || line == "exit") break;
-			if (!line.empty()) processCommand(line);
-		}
-		saveToFile(filePath);
 	}
 
-	cout << "\n[Программа завершена. Нажмите Enter для выхода.]";
-	cin.get();
-
+	cout << "\n[Программа завершена.]\n";
 	return 0;
 }

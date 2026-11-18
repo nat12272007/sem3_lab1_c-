@@ -3,34 +3,37 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
 using namespace std;
 
-struct CompleteBinaryTree {
-	string* tree;
-	int size;
-	int capacity;
+struct TNode {
+	int value;
+	TNode* left;
+	TNode* right;
+	TNode(int v) : value(v), left(nullptr), right(nullptr) {}
+};
 
-	CompleteBinaryTree(int cap = 4);
+struct CompleteBinaryTree {
+	TNode* root;
+	int size;
+
+	CompleteBinaryTree();
 	~CompleteBinaryTree();
 
-	void ensureCapacity(int needed);
-	void insert(const string& value);
-	int search(const string& value) const;
-	bool remove(const string& value);
+	bool insert(int value);
+	bool search(int value) const;
+	bool remove(int value);
 	bool isComplete() const;
-	
+
 	void print() const;
-	void printPreOrder(int index) const;
-	void printInOrder(int index) const;
-	void printPostOrder(int index) const;
 	void printPre() const;
 	void printIn() const;
 	void printPost() const;
 	void clear();
 
 	int getSize() const { return size; }
-	string getElement(int index) const { return tree[index]; }
+	vector<int> getElements() const;
 };
 
 #endif
