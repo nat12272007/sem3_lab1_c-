@@ -56,6 +56,3 @@
 	TPRE mytree — прямой обход (Pre-order).
 	TIN mytree — симметричный обход (In-order).
 	TPOST mytree — обратный обход (Post-order).
-
-
--2147483648
