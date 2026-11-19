@@ -141,8 +141,8 @@ void processCommand(const string& query) {
 		else if (cmd == "LADDBEFORE") { iss >> name >> t >> v; LNode* n = dlist.find(t); if (n) dlist.insertBefore(n, v); }
 		else if (cmd == "LDELHEAD") { iss >> name; dlist.popFront(); }
 		else if (cmd == "LDELTAIL") { iss >> name; dlist.popBack(); }
-		else if (cmd == "LDELAFTER") { iss >> name >> t; LNode* n = dlist.find(t); if (n && n->next) dlist.removeNode(n->next); }
-		else if (cmd == "LDELBEFORE") { iss >> name >> t; LNode* n = dlist.find(t); if (n && n->prev) dlist.removeNode(n->prev); }
+		else if (cmd == "LDELAFTER") { iss >> name >> t; dlist.removeAfter(t); }
+		else if (cmd == "LDELBEFORE") { iss >> name >> t; dlist.removeBefore(t); }
 		else if (cmd == "LDELVAL") { iss >> name >> v; dlist.removeByValue(v); }
 		else if (cmd == "LGET") { int i; iss >> name >> i; cout << dlist.getByIndex(i) << "\n"; }
 		else if (cmd == "LFIND") { iss >> name >> v; cout << (dlist.find(v) ? "TRUE" : "FALSE") << "\n"; }

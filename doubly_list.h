@@ -29,6 +29,8 @@ struct DoublyList {
 	void popFront();
 	void popBack();
 	void removeNode(LNode* node);
+	bool removeAfter(const string& value);
+	bool removeBefore(const string& value);
 
 	LNode* find(const string& value);
 	bool removeByValue(const string& value);

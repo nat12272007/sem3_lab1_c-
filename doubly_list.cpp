@@ -67,6 +67,24 @@ void DoublyList::removeNode(LNode* node) {
 	--count;
 }
 
+bool DoublyList::removeAfter(const string& value){
+	LNode* target = find(value);
+	if (target && target -> next){
+		removeNode(target->next);
+		return true;
+	}
+	return false;
+}
+
+bool DoublyList::removeBefore(const string& value){
+	LNode* target = find(value);
+	if (target && target->prev){
+		removeNode(target->prev);
+		return true;
+	}
+	return false;
+}
+
 LNode* DoublyList::find(const string& value) {
 	for (LNode* cur = head; cur; cur = cur->next)
 		if (cur->value == value) return cur;
